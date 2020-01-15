@@ -1,5 +1,6 @@
 package br.com.alura.forum.controller;
 
+import br.com.alura.forum.controller.dto.output.TopicBriefOutputDto;
 import br.com.alura.forum.model.Category;
 import br.com.alura.forum.model.Course;
 import br.com.alura.forum.model.User;
@@ -16,7 +17,7 @@ public class TopicController {
 
     @ResponseBody
     @RequestMapping("/api/topics")
-    public List<Topic> listTopics() {
+    public List<TopicBriefOutputDto> listTopics() {
         Category subcategory = new Category("Java", new Category("Programação"));
         Course course = new Course("Java e JSF", subcategory);
         Topic topic = new Topic("Problemas com JSF",
@@ -24,6 +25,6 @@ public class TopicController {
                 new User("Fulano", "fulano@gmail.com", "123456"), course);
 
         List<Topic> topics = Arrays.asList(topic, topic, topic);
-        return topics;
+        return TopicBriefOutputDto.listFromTopics(topics);
     }
 }
