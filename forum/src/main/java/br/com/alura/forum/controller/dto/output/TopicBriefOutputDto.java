@@ -2,6 +2,7 @@ package br.com.alura.forum.controller.dto.output;
 
 import br.com.alura.forum.model.topic.domain.Topic;
 import br.com.alura.forum.model.topic.domain.TopicStatus;
+import org.springframework.data.domain.Page;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -33,16 +34,20 @@ public class TopicBriefOutputDto {
         this.solved = TopicStatus.SOLVED.equals(topic.getStatus());
     }
 
+    public static Page<TopicBriefOutputDto> listFromTopics(Page<Topic> topics) {
+        return topics.map(TopicBriefOutputDto::new);
+    }
+
     private long getSecondsSince(Instant lastUpdate) {
         return Duration.between(lastUpdate, Instant.now())
                 .get(ChronoUnit.SECONDS);
     }
 
-    public static List<TopicBriefOutputDto> listFromTopics(List<Topic> topics) {
-        return topics.stream()
-                .map(TopicBriefOutputDto::new)
-                .collect(Collectors.toList());
-    }
+//    public static List<TopicBriefOutputDto> listFromTopics(List<Topic> topics) {
+//        return topics.stream()
+//                .map(TopicBriefOutputDto::new)
+//                .collect(Collectors.toList());
+//    }
 
     public Long getId() {
         return id;
