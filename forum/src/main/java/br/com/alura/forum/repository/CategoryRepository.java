@@ -9,6 +9,7 @@ import java.util.List;
 
 public interface CategoryRepository extends Repository<Category, Long> {
 
-    @Query("select c from Category c where c.subcategories is not empty")
-    List<Category> findMainCategories();
+    List<Category> findByCategoryIsNull();
+
+    Category findByName(String string);
 }
