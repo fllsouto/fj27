@@ -83,4 +83,8 @@ public class Category {
 			return false;
 		return true;
 	}
+
+	public boolean isSubCategory() {
+		return (category != null);
+	}
 }
