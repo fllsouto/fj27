@@ -1,6 +1,8 @@
 package br.com.alura.forum.model.topic.domain;
 
+import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -133,5 +135,13 @@ public class Topic {
 
 	public void close() {
 		this.status.close(this);
+	}
+
+    public boolean isUnanswered() {
+    	return (status.equals(TopicStatus.NOT_ANSWERED));
+	}
+
+	public boolean isOneWeekOld() {
+		return (Duration.between(creationInstant, Instant.now()).toDays() > 7);
 	}
 }
