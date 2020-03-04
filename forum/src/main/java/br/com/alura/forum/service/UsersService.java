@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.Optional;
 
 @Service
-public class UserService implements UserDetailsService {
+public class UsersService implements UserDetailsService {
 
     @Autowired
     private UserRepository userRepository;
@@ -22,5 +22,11 @@ public class UserService implements UserDetailsService {
                 .findByEmail(username);
 
         return possibleUser.orElseThrow(() -> new UsernameNotFoundException("Não foi possível enontrar o usuário com o email : " + username));
+    }
+
+    public UserDetails loadUserById(Long userId) {
+        Optional<User> possibleUser = userRepository.findById(userId);
+
+        return possibleUser.orElseThrow(() -> new UsernameNotFoundException("Não foi possível enontrar o usuário com o id : " + userId));
     }
 }
