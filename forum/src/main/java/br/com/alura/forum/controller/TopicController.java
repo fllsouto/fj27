@@ -23,6 +23,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import javax.validation.Valid;
 import java.net.URI;
 import java.util.List;
 
@@ -56,7 +57,7 @@ public class TopicController {
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE,
         produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<TopicOutputDto> createTopic(@RequestBody NewTopicInputDto newTopicDto,
+    public ResponseEntity<TopicOutputDto> createTopic(@Valid @RequestBody NewTopicInputDto newTopicDto,
         @AuthenticationPrincipal User owner, UriComponentsBuilder uriBuilder) {
 
         Topic topic = newTopicDto.build(owner, courseRepository);

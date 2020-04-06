@@ -5,9 +5,17 @@ import br.com.alura.forum.model.User;
 import br.com.alura.forum.model.topic.domain.Topic;
 import br.com.alura.forum.repository.CourseRepository;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
+
 public class NewTopicInputDto {
 
+    @NotBlank
+    @Size(min = 10)
     private String shortDescription;
+
+    @NotBlank
+    @Size(min = 10)
     private String content;
     private String courseName;
 
