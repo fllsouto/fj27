@@ -11,6 +11,7 @@ import br.com.alura.forum.model.topic.domain.Topic;
 import br.com.alura.forum.repository.CourseRepository;
 import br.com.alura.forum.repository.TopicRepository;
 import br.com.alura.forum.service.DashboardDataProcessingService;
+import br.com.alura.forum.validator.NewTopicCustomValidator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,6 +21,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -39,6 +41,11 @@ public class TopicController {
 
     @Autowired
     private CourseRepository courseRepository;
+
+    @InitBinder("newTopicInputDto")
+    public void initBinder(WebDataBinder binder, @AuthenticationPrincipal User loggedUser) {
+        binder.addValidators(new NewTopicCustomValidator(this.topicRepository, loggedUser));
+    }
 
     @GetMapping(produces=MediaType.APPLICATION_JSON_VALUE)
     public Page<TopicBriefOutputDto> listTopics(TopicSearchInputDto topicSearch,
