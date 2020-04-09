@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 public interface TopicRepository extends Repository<Topic, Long>, JpaSpecificationExecutor<Topic> {
 
@@ -45,4 +46,6 @@ public interface TopicRepository extends Repository<Topic, Long>, JpaSpecificati
     void save(Topic topic);
 
     List<Topic> findByOwnerAndCreationInstantAfterOrderByCreationInstantAsc(User loggedUser, Instant oneHourAgo);
+
+    Optional<Topic> findById(Long topicId);
 }

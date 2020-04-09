@@ -1,13 +1,14 @@
 package br.com.alura.forum.controller;
 
 import br.com.alura.forum.controller.dto.data.CategoriesAndTheirStatisticsData;
+import br.com.alura.forum.controller.dto.input.NewAnswerInputDto;
 import br.com.alura.forum.controller.dto.input.NewTopicInputDto;
 import br.com.alura.forum.controller.dto.input.TopicSearchInputDto;
-import br.com.alura.forum.controller.dto.output.TopicBriefOutputDto;
-import br.com.alura.forum.controller.dto.output.TopicDashboardItemOutputDto;
-import br.com.alura.forum.controller.dto.output.TopicOutputDto;
+import br.com.alura.forum.controller.dto.output.*;
+import br.com.alura.forum.model.Answer;
 import br.com.alura.forum.model.User;
 import br.com.alura.forum.model.topic.domain.Topic;
+import br.com.alura.forum.repository.AnswerRepository;
 import br.com.alura.forum.repository.CourseRepository;
 import br.com.alura.forum.repository.TopicRepository;
 import br.com.alura.forum.service.DashboardDataProcessingService;
@@ -28,6 +29,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import javax.validation.Valid;
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/topics")
@@ -41,6 +43,9 @@ public class TopicController {
 
     @Autowired
     private CourseRepository courseRepository;
+
+    @Autowired
+    private AnswerRepository answerRepository;
 
     @InitBinder("newTopicInputDto")
     public void initBinder(WebDataBinder binder, @AuthenticationPrincipal User loggedUser) {
@@ -71,5 +76,32 @@ public class TopicController {
         this.topicRepository.save(topic);
         URI path = uriBuilder.path("/api/topics/{id}").buildAndExpand(topic.getId()).toUri();
         return ResponseEntity.created(path).body(new TopicOutputDto(topic));
+    }
+
+    @GetMapping("/{topicId}")
+    public TopicWithAnswersOutputDto getTopic(@PathVariable("topicId") Long topicId) {
+        Optional<Topic> optionalTopic = topicRepository.findById(topicId);
+
+        Topic topic = optionalTopic.orElseThrow(() -> new RuntimeException("Tópico não encontrado!"));
+
+        return new TopicWithAnswersOutputDto(topic);
+    }
+
+    @PostMapping(value = "/{topicId}/answers",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<AnswerOutputDto> createAnswer(@PathVariable("topicId") Long topicId,
+        @RequestBody @Valid NewAnswerInputDto newAnswerDto,
+        @AuthenticationPrincipal User loggedUser,
+        UriComponentsBuilder uriComponentsBuilder) {
+
+        Optional<Topic> optionalTopic = topicRepository.findById(topicId);
+        Topic topic = optionalTopic.orElseThrow(() -> new RuntimeException("Tópico não encontrado!"));
+
+        Answer answer = new Answer(newAnswerDto.getContent(), topic, loggedUser);
+        answerRepository.save(answer);
+
+        URI path = uriComponentsBuilder.path("/api/topics/{topicId}").buildAndExpand(topicId).toUri();
+        return ResponseEntity.created(path).body(new AnswerOutputDto(answer));
     }
 }
