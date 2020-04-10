@@ -7,6 +7,9 @@ import br.com.alura.forum.model.User;
 import br.com.alura.forum.model.topic.domain.Topic;
 import br.com.alura.forum.repository.AnswerRepository;
 import br.com.alura.forum.repository.TopicRepository;
+import br.com.alura.forum.service.NewReplyProcessorService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -20,25 +23,28 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/topics/{topicId}/answers")
-public class AnwserController {
+public class AnswerController {
+
+    private final Logger logger = LoggerFactory.getLogger(AnswerController.class);
 
     @Autowired
     private TopicRepository topicRepository;
 
     @Autowired
-    private AnswerRepository answerRepository;
+    private NewReplyProcessorService newReplyProcessorService;
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<AnswerOutputDto> createAnswer(@PathVariable Long topicId,
         @RequestBody @Valid NewAnswerInputDto newAnswerDto,
         @AuthenticationPrincipal User loggedUser,
         UriComponentsBuilder uriComponentsBuilder) {
+        logger.info("Executando criação de nova resposta na Thread de ID: " + Thread.currentThread().getId());
 
         Optional<Topic> optionalTopic = topicRepository.findById(topicId);
         Topic topic = optionalTopic.orElseThrow(() -> new RuntimeException("Tópico não encontrado!"));
 
         Answer answer = newAnswerDto.build(topic, loggedUser);
-        answerRepository.save(answer);
+        newReplyProcessorService.execute(answer);
 
         URI path = uriComponentsBuilder
                 .path("/api/topics/{topicId}/answers/{answerId}")
