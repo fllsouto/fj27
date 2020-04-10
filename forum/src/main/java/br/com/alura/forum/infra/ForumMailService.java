@@ -8,6 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.MailException;
 import org.springframework.mail.MailSender;
 import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.mail.javamail.MimeMessagePreparator;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -17,23 +20,28 @@ public class ForumMailService {
     private static final Logger logger = LoggerFactory.getLogger(ForumMailService.class);
 
     @Autowired
-    private MailSender mailSender;
+    private JavaMailSender mailSender;
+
+    @Autowired
+    private NewReplyMailFactory newReplyMailFactory;
 
     @Async
     public void sendNewReplyMail(Answer answer) {
         logger.info("Executando envio de email na Thread de ID: " + Thread.currentThread().getId());
         Topic answeredTopic = answer.getTopic();
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(answeredTopic.getOwnerEmail());
-        message.setSubject("Novo comentário em: " + answeredTopic.getShortDescription());
+        MimeMessagePreparator messagePreparator = (mimeMessage) -> {
+            MimeMessageHelper messageHelper = new MimeMessageHelper(mimeMessage);
+            messageHelper.setTo(answeredTopic.getOwnerEmail());
+            messageHelper.setSubject("Novo comentário em: " + answeredTopic.getShortDescription());
 
-        message.setText("Olá " + answeredTopic.getOwnerEmail() + "\n\n" +
-                "Há uma nova mensagem no fórum! " + answer.getOwnerName() +
-                " comentou no tópico: " + answeredTopic.getShortDescription());
+            String messageContent = this.newReplyMailFactory
+                    .generateNewReplyMailContent(answer);
+            messageHelper.setText(messageContent, true);
+        };
 
         try {
-            mailSender.send(message);
+            mailSender.send(messagePreparator);
             logger.info("Email enviado com sucesso!");
         } catch (MailException e) {
             logger.error("Não foi possível enviar email para " + answer.getTopic().getOwnerEmail(), e.getMessage());
