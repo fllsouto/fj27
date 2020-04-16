@@ -1,6 +1,7 @@
 package br.com.alura.forum.repository;
 
 import br.com.alura.forum.model.Category;
+import br.com.alura.forum.model.OpenTopicByCategory;
 import br.com.alura.forum.model.User;
 import br.com.alura.forum.model.topic.domain.Topic;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -48,4 +49,12 @@ public interface TopicRepository extends Repository<Topic, Long>, JpaSpecificati
     List<Topic> findByOwnerAndCreationInstantAfterOrderByCreationInstantAsc(User loggedUser, Instant oneHourAgo);
 
     Optional<Topic> findById(Long topicId);
+
+    @Query("select new br.com.alura.forum.model.OpenTopicByCategory(" +
+        "t.course.subcategory.category.name as categoryName, " +
+        "count(t) as topicCount, " +
+        "now() as instant) from Topic t " +
+        "where t.status = 'NOT_ANSWERED' " +
+        "group by t.course.subcategory.category")
+    List<OpenTopicByCategory> findOpenTopicsByCategory();
 }
