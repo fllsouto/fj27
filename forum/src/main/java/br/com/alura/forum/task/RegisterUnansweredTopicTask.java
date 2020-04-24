@@ -23,10 +23,10 @@ public class RegisterUnansweredTopicTask {
     private OpenTopicByCategoryRepository openTopicByCategoryRepository;
 
     // Execução as 20hrs, todos os dias
-    //@Scheduled(cron = "0 0 20 * * *")
+    @Scheduled(cron = "0 0 20 * * *")
 
     // Execução de 10 em 10 segundos
-    @Scheduled(cron = "*/10 * * * * *")
+    //@Scheduled(cron = "*/10 * * * * *")
     public void execute() {
         logger.info("Gerando relatório de tópicos não respondidos...");
         List<OpenTopicByCategory> topics = topicRepository
