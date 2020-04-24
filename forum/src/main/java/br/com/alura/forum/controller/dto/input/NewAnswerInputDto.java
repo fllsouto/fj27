@@ -17,6 +17,10 @@ public class NewAnswerInputDto {
         return content;
     }
 
+    public void setContent(String content) {
+        this.content = content;
+    }
+
     public Answer build(Topic topic, User loggedUser) {
         return new Answer(this.getContent(), topic, loggedUser);
     }
