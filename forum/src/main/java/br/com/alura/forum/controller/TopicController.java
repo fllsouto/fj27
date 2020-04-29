@@ -13,6 +13,7 @@ import br.com.alura.forum.repository.TopicRepository;
 import br.com.alura.forum.service.DashboardDataProcessingService;
 import br.com.alura.forum.validator.NewTopicCustomValidator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -57,6 +58,7 @@ public class TopicController {
         return TopicBriefOutputDto.listFromTopics(topics);
     }
 
+    @Cacheable("dashboardData")
     @GetMapping(value = "/dashboard", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<TopicDashboardItemOutputDto> getDashboardInfo() {
         CategoriesAndTheirStatisticsData categoriesStatisticsData = this.dashboardDataProcessingService.execute();
@@ -75,7 +77,9 @@ public class TopicController {
     }
 
     @GetMapping("/{topicId}")
+    @Cacheable(value = "topicDetails", key="#topicId")
     public TopicOutputDto getTopicDetails(@PathVariable Long topicId) {
+        System.out.println("Executando o getTopicDetails");
         Optional<Topic> optionalTopic = topicRepository.findById(topicId);
         Topic topic = optionalTopic.orElseThrow(() -> new RuntimeException("Tópico não encontrado!"));
         return new TopicOutputDto(topic);
