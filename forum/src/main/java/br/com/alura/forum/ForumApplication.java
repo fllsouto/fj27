@@ -21,9 +21,10 @@ public class ForumApplication {
 		SpringApplication.run(ForumApplication.class, args);
 	}
 
-	@Bean
-	public CacheManager cacheManager() {
-		return new ConcurrentMapCacheManager();
-	}
+	//  Substituído pelo Cache via Redis
+	//	@Bean
+	//	public CacheManager cacheManager() {
+	//		return new ConcurrentMapCacheManager();
+	//	}
 
 }

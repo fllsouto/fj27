@@ -3,11 +3,12 @@ package br.com.alura.forum.controller.dto.output;
 import br.com.alura.forum.model.topic.domain.Topic;
 import br.com.alura.forum.model.topic.domain.TopicStatus;
 
+import java.io.Serializable;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TopicOutputDto {
+public class TopicOutputDto implements Serializable {
     private Long id;
     private String shortDescription;
     private String content;
@@ -21,6 +22,7 @@ public class TopicOutputDto {
     private String subcategoryName;
     private String categoryName;
     private List<AnswerOutputDto> answers = new ArrayList<AnswerOutputDto>();
+    private static final long serialVersionUID = 5737948839648634160L;
 
     public TopicOutputDto(Topic topic) {
         this.id = topic.getId();

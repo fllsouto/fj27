@@ -4,15 +4,17 @@ import br.com.alura.forum.controller.dto.data.CategoriesAndTheirStatisticsData;
 import br.com.alura.forum.controller.dto.data.CategoryStatisticsData;
 import br.com.alura.forum.model.Category;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class TopicDashboardItemOutputDto {
+public class TopicDashboardItemOutputDto implements Serializable {
 
     private String categoryName;
     private List<String> subcategories;
     private int allTopics;
     private int lastWeekTopics;
     private int unansweredTopics;
+    private static final long serialVersionUID = 1808919651999253689L;
 
     public TopicDashboardItemOutputDto(Category category, CategoryStatisticsData numbers) {
         this.categoryName = category.getName();
