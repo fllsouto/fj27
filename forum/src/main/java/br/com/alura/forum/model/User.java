@@ -1,5 +1,6 @@
 package br.com.alura.forum.model;
 
+import br.com.alura.forum.model.topic.domain.Topic;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -95,5 +96,14 @@ public class User implements UserDetails {
 	@Override
 	public int hashCode() {
 		return Objects.hash(email);
+	}
+
+    public boolean isOwnerOf(Topic topic) {
+    	return this.equals(topic.getOwner());
+	}
+
+	public boolean isAdmin() {
+		return this.authorities.stream().filter(role -> role.equals(Role.ROLE_ADMIN))
+				.findFirst().isPresent();
 	}
 }

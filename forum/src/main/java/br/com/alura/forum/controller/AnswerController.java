@@ -12,12 +12,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.net.URI;
 import java.util.Optional;
@@ -33,6 +35,9 @@ public class AnswerController {
 
     @Autowired
     private NewReplyProcessorService newReplyProcessorService;
+
+    @Autowired
+    private AnswerRepository answerRepository;
 
     @CacheEvict(value = "topicDetails", key = "#topicId")
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -54,5 +59,28 @@ public class AnswerController {
                 .toUri();
 
         return ResponseEntity.created(path).body(new AnswerOutputDto(answer));
+    }
+
+    @Transactional
+    @CacheEvict(value = "topicDetails", key = "#topicId")
+    @PostMapping("/{answerId}/solution")
+    public ResponseEntity<?> markAsSolution(@PathVariable("topicId") Long topicId, @PathVariable("answerId") Long answerId,
+        UriComponentsBuilder uriBuilder, @AuthenticationPrincipal User loggedUser) {
+
+        Topic topic = topicRepository.findById(topicId)
+                .orElseThrow(() -> new RuntimeException("Tópico não encontrado!"));
+
+        if(loggedUser.isOwnerOf(topic) || loggedUser.isAdmin()) {
+
+            Answer answer = answerRepository.findById(answerId);
+            answer.markAsSolution();
+
+            URI uri = uriBuilder.path("/api/topics/{topicId}/solution")
+                    .buildAndExpand(topicId)
+                    .toUri();
+            return ResponseEntity.created(uri).body(new AnswerOutputDto(answer));
+        }
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Você não tem direito a acessar este recurso!");
     }
 }

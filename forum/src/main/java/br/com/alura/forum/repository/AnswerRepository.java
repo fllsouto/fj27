@@ -6,4 +6,6 @@ import org.springframework.data.repository.Repository;
 public interface AnswerRepository extends Repository<Answer, Long> {
 
     void save(Answer answer);
+
+    Answer findById(Long answerId);
 }
