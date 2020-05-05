@@ -12,8 +12,8 @@ public class Role implements GrantedAuthority {
     @Id
     private String authority;
 
-    static final Role ROLE_ADMIN = new Role("ROLE_ADMIN");
-    static final Role ROLE_ALUNO = new Role("ROLE_ALUNO");
+    public static final Role ROLE_ADMIN = new Role("ROLE_ADMIN");
+    public static final Role ROLE_ALUNO = new Role("ROLE_ALUNO");
 
     /**
      * @deprecated hibernate only

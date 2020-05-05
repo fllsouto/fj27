@@ -6,6 +6,7 @@ import br.com.alura.forum.controller.dto.input.TopicSearchInputDto;
 import br.com.alura.forum.controller.dto.output.TopicBriefOutputDto;
 import br.com.alura.forum.controller.dto.output.TopicDashboardItemOutputDto;
 import br.com.alura.forum.controller.dto.output.TopicOutputDto;
+import br.com.alura.forum.infra.TopicAclPermissionRecorderService;
 import br.com.alura.forum.model.User;
 import br.com.alura.forum.model.topic.domain.Topic;
 import br.com.alura.forum.repository.CourseRepository;
@@ -13,6 +14,7 @@ import br.com.alura.forum.repository.TopicRepository;
 import br.com.alura.forum.service.DashboardDataProcessingService;
 import br.com.alura.forum.validator.NewTopicCustomValidator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,11 +23,14 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.acls.domain.BasePermission;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import javax.transaction.Transactional;
 import javax.validation.Valid;
 import java.net.URI;
 import java.util.List;
@@ -43,6 +48,9 @@ public class TopicController {
 
     @Autowired
     private CourseRepository courseRepository;
+
+    @Autowired
+    private TopicAclPermissionRecorderService aclPermissionsRecorder;
 
     @InitBinder("newTopicInputDto")
     public void initBinder(WebDataBinder binder, @AuthenticationPrincipal User loggedUser) {
@@ -65,13 +73,17 @@ public class TopicController {
         return TopicDashboardItemOutputDto.listFromCategories(categoriesStatisticsData);
     }
 
+    @Transactional
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE,
         produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<TopicOutputDto> createTopic(@Valid @RequestBody NewTopicInputDto newTopicDto,
-        @AuthenticationPrincipal User owner, UriComponentsBuilder uriBuilder) {
+        @AuthenticationPrincipal User loggedUser, UriComponentsBuilder uriBuilder) {
 
-        Topic topic = newTopicDto.build(owner, courseRepository);
+        Topic topic = newTopicDto.build(loggedUser, courseRepository);
         this.topicRepository.save(topic);
+
+        aclPermissionsRecorder.addPermission(loggedUser, topic, BasePermission.ADMINISTRATION);
+
         URI path = uriBuilder.path("/api/topics/{id}").buildAndExpand(topic.getId()).toUri();
         return ResponseEntity.created(path).body(new TopicOutputDto(topic));
     }
@@ -83,6 +95,23 @@ public class TopicController {
         Optional<Topic> optionalTopic = topicRepository.findById(topicId);
         Topic topic = optionalTopic.orElseThrow(() -> new RuntimeException("Tópico não encontrado!"));
         return new TopicOutputDto(topic);
+    }
+
+    @Transactional
+    @CacheEvict(value = "topicDetails", key = "#topicId")
+    @PostMapping("/{topicId}/close")
+    @PreAuthorize(
+            "hasPermission(#topicId, 'br.com.alura.forum.model.topic.domain.Topic', 'ADMINISTRATION')"
+    )
+    public ResponseEntity<Void> closeTopic(@PathVariable("topicId") Long topicId, UriComponentsBuilder uriBuilder) {
+
+        Topic topic = topicRepository.findById(topicId)
+                .orElseThrow(() -> new RuntimeException("Tópico não encontrado"));
+        topic.close();
+
+        URI uri = uriBuilder.path("/api/topics/{topicId}/closed").buildAndExpand(topicId).toUri();
+
+        return ResponseEntity.noContent().location(uri).build();
     }
 
 }

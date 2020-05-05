@@ -15,6 +15,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -64,13 +65,16 @@ public class AnswerController {
     @Transactional
     @CacheEvict(value = "topicDetails", key = "#topicId")
     @PostMapping("/{answerId}/solution")
+    @PreAuthorize(
+            "hasPermission(#topicId, 'br.com.alura.forum.model.topic.domain.Topic', 'ADMINISTRATION')"
+    )
     public ResponseEntity<?> markAsSolution(@PathVariable("topicId") Long topicId, @PathVariable("answerId") Long answerId,
         UriComponentsBuilder uriBuilder, @AuthenticationPrincipal User loggedUser) {
 
         Topic topic = topicRepository.findById(topicId)
                 .orElseThrow(() -> new RuntimeException("Tópico não encontrado!"));
 
-        if(loggedUser.isOwnerOf(topic) || loggedUser.isAdmin()) {
+     //   if(loggedUser.isOwnerOf(topic) || loggedUser.isAdmin()) {
 
             Answer answer = answerRepository.findById(answerId);
             answer.markAsSolution();
@@ -79,8 +83,8 @@ public class AnswerController {
                     .buildAndExpand(topicId)
                     .toUri();
             return ResponseEntity.created(uri).body(new AnswerOutputDto(answer));
-        }
+       // }
 
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Você não tem direito a acessar este recurso!");
+        // return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Você não tem direito a acessar este recurso!");
     }
 }
