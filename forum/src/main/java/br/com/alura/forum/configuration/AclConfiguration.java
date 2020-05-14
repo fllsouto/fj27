@@ -24,7 +24,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import javax.sql.DataSource;
 
 @Configuration
-@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class AclConfiguration {
 
     @Autowired
@@ -41,7 +41,7 @@ public class AclConfiguration {
     }
 
     @Bean
-    public MutableAclService aclService(LookupStrategy lookupStrategy, AclCache aclCache) {
+    public AclService aclService(LookupStrategy lookupStrategy, AclCache aclCache) {
         JdbcMutableAclService aclService = new JdbcMutableAclService(this.dataSource, lookupStrategy, aclCache);
 
         aclService.setClassIdentityQuery("SELECT @@IDENTITY");
@@ -50,23 +50,16 @@ public class AclConfiguration {
     }
 
     @Bean
-    public AclAuthorizationStrategy aclAuthorizationStrategy() {
-        return new AclAuthorizationStrategyImpl(
-                new SimpleGrantedAuthority("ROLE_ADMIN")
-        );
-    }
+    public LookupStrategy lookupStrategy(AclCache aclCache, AclAuthorizationStrategy aclAuthorizationStrategy) {
+        ConsoleAuditLogger auditLogger = new ConsoleAuditLogger();
 
-    @Bean
-    public PermissionGrantingStrategy permissionGrantingStrategy() {
-        return new DefaultPermissionGrantingStrategy(
-                new ConsoleAuditLogger()
-        );
+        return new BasicLookupStrategy(this.dataSource, aclCache, aclAuthorizationStrategy, auditLogger);
     }
 
     @Bean
     public EhCacheBasedAclCache aclCache(EhCacheFactoryBean ehCacheFactoryBean,
-         PermissionGrantingStrategy permissionGrantingStrategy,
-         AclAuthorizationStrategy aclAuthorizationStrategy) {
+                                         PermissionGrantingStrategy permissionGrantingStrategy,
+                                         AclAuthorizationStrategy aclAuthorizationStrategy) {
 
         Ehcache ehcache = ehCacheFactoryBean.getObject();
 
@@ -89,9 +82,20 @@ public class AclConfiguration {
     }
 
     @Bean
-    public LookupStrategy lookupStrategy(AclCache aclCache, AclAuthorizationStrategy aclAuthorizationStrategy) {
-        ConsoleAuditLogger auditLogger = new ConsoleAuditLogger();
-
-        return new BasicLookupStrategy(this.dataSource, aclCache, aclAuthorizationStrategy, auditLogger);
+    public PermissionGrantingStrategy permissionGrantingStrategy() {
+        return new DefaultPermissionGrantingStrategy(
+                new ConsoleAuditLogger()
+        );
     }
+
+    @Bean
+    public AclAuthorizationStrategy aclAuthorizationStrategy() {
+        return new AclAuthorizationStrategyImpl(
+                new SimpleGrantedAuthority("ROLE_ADMIN")
+        );
+    }
+
+
+
+
 }

@@ -82,7 +82,7 @@ public class TopicController {
         Topic topic = newTopicDto.build(loggedUser, courseRepository);
         this.topicRepository.save(topic);
 
-        aclPermissionsRecorder.addPermission(loggedUser, topic, BasePermission.ADMINISTRATION);
+        aclPermissionsRecorder.addPermission(topic, BasePermission.ADMINISTRATION);
 
         URI path = uriBuilder.path("/api/topics/{id}").buildAndExpand(topic.getId()).toUri();
         return ResponseEntity.created(path).body(new TopicOutputDto(topic));

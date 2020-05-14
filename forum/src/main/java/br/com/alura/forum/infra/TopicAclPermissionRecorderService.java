@@ -19,11 +19,11 @@ public class TopicAclPermissionRecorderService {
     @Autowired
     private JdbcMutableAclService aclService;
 
-    public void addPermission(UserDetails principal, Topic topic, Permission... permissions) {
+    public void addPermission(Topic topic, Permission... permissions) {
         ObjectIdentityImpl identity = new ObjectIdentityImpl(topic);
         MutableAcl acl = this.aclService.createAcl(identity);
 
-        PrincipalSid principalSid = new PrincipalSid(principal.getUsername());
+        PrincipalSid principalSid = (PrincipalSid) acl.getOwner();
 
         for (Permission permission : permissions) {
             acl.insertAce(acl.getEntries().size(), permission, principalSid, true);
